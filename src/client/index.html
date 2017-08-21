@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/cr-1.3.3/fh-3.1.2/kt-2.2.1/rg-1.0.0/rr-1.2.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>
+    <link rel="stylesheet" href="css/layout.css">
+</head>
+<body>
+<div class="nav-header" id='nav-header'>
+    <input type="button" class='nav-min button-sound' id='nav-min'>
+    <input type="button" class='nav-close button-sound' id='nav-close'>
+    <input type="button" class="btn btn-success btn-xs nav-con button-sound" style="position: fixed;right: 0px;" value="传输列表" id="menu">
+</div>
+<div class="main button-sound" style="margin-top: 22px">
+    <div id="index" class="show">
+        <div class="col-sm-12 list-button" >
+           <input type="button" id='file-button' value="上传" class='btn file-button' >
+           <input type="file" id="file" style="display:none" onchange="this.value">
+           <input type="button" value='下载' id='dl-button' class='btn dl-button'>
+           <input type="button" value='删除' id='del-button' class='btn del-button'>
+           <input type="button" value='刷新' id='list-files-button' class='btn list-files-button'>
+        </div>
+        <div class="col-sm-12">
+            <div id="dotcon-list" class="col-sm-12 button-sound"></div>
+            <div class="panel-body">
+                <textarea id="dottp-list" style="display: none">
+                    <table class="table table-striped" id="list-files-table" style="width: 1000px;">
+                        <thead>
+                        <th><input type="checkbox" id='all'>文件名</th>
+                        <th>大小</th>
+                        <th>修改时间</th>
+                        <th>操作</th>
+                        </thead>
+                        <tbody id='list'>
+                        {{~it :objects:index}}
+                        <tr>
+                            <td><input type="checkbox" value="{{=objects.name}}" class='button-sound'>{{=objects.name}}</td>
+                            {{? objects.size/1000<1024}}
+                            <td>{{=objects.size/1000}}KB</td>
+                            {{?? (objects.size/1000/1024).toFixed(2)<1024}}
+                            <td>{{=(objects.size/1000/1024).toFixed(2)}}MB</td>
+                            {{??}}
+                            <td>{{=(objects.size/1024/1000/1024).toFixed(2)}}G</td>
+                            {{?}}
+                            <td>{{=new Date(objects.lastModified).toLocaleString()}}</td>
+                            <td><input type="button" class='btn deleted' id='del-button-{{=objects.name}}' data-del='{{=objects.name}}'><input type="button" class='btn downlownd' id='list-button-{{=objects.name}}' data-list="{{=objects.name}}" ></td>
+                        </tr>
+                        {{~}}
+                        </tbody>
+                    </table>
+                </textarea>
+            </div>
+        </div>
+    </div>
+    <div id="sidemune" class="hide">
+        <div id="tab" style="margin-top:20px">
+            <div class="tabList">
+                <div class="col-lg-offset-3 col-lg-6" >
+                    <div class="tab" role="tabpanel">
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs-justified" role="tablist">
+                            <li role="presentation" class="active col-sm-4"><a class='button-sound' href="#uploading" aria-controls="home" role="tab" data-toggle="tab" style="padding-left: 0px;" >上传列表</a>
+                            </li>
+                            <li role="presentation" class="col-sm-4"><a class='button-sound' href="#download" aria-controls="home" role="tab" data-toggle="tab">下载列表</a>
+                            </li>
+                            <li role="presentation" class="col-sm-4"><a class='button-sound' href="#complete" aria-controls="messages" role="tab" data-toggle="tab" style="padding-right: 0px;">传输完成</a></li>
+                        </ul>
+                        <!-- Tab panes -->
+                        <div class="tab-content tabs">
+                            <div role="tabpanel" class="tab-pane fade in active" id="uploading">
+                                <div id="uploading-list"></div>
+                                <div class="panel-body">
+                                    <textarea id="upload-list" style="display: none">
+                                        <table class="table table-striped" id="list-uploading-table" style="width: 1000px;">
+                                            <thead>
+                                            <tr>
+                                                <th class="col-sm-2">文件名</th>
+                                                <th class="col-sm-1">大小</th>
+                                                <th class="col-sm-4">进程</th>
+                                                <th class="col-sm-5">操作</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {{~it :file:index}}
+                                            <tr>
+                                                <td class="col-sm-2">{{=file.name}}</td>
+                                                {{? file.fileSize/1000<1024}}
+                                                <td class="col-sm-1">{{=file.fileSize/1000}}KB</td>
+                                                {{?? (file.fileSize/1000/1024).toFixed(2)<1024}}
+                                                <td class="col-sm-1">{{=(file.fileSize/1000/1024).toFixed(2)}}MB</td>
+                                                {{??}}
+                                                <td class="col-sm-1">{{=(file.fileSize/1024/1000/1024).toFixed(2)}}G</td>
+                                                {{?}}
+                                                <td class="col-sm-4"><div class="progress"><div id="progress-{{=index}}" class="progress-bar" role="progressbar" aria-valuenow="0"
+                                                                               aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;">0%</div></div>
+                                                </td>
+                                                <td class="col-sm-5"><input type="button" class="btn btn-primary" id="file-button-{{=file.uploadId}}" value="继续上传" data-file="{{=file.uploadId}}"/><input type="button" class="btn btn-primary" id="pause-button-{{=file.uploadId}}" data-pause="{{=file.uploadId}}" value="暂停"/><input type="button" class="btn btn-primary" data-stop="{{=file.uploadId}}" id="stop-button-{{=file.uploadId}}" value="删除"/>
+                                                </td>
+                                            </tr>
+                                            {{~}}
+                                            </tbody>
+                                        </table>
+                                    </textarea>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane fade" id="download">
+                                <div id="down-list" class="col-sm-12">
+                                </div>
+                                <div class="panel-body">
+                                    <textarea id="downloading-list" style="display: none">
+                                        <table class="table table-striped" id="list-downloading-table" style="width: 1000px;">
+                                            <thead>
+                                            <th class='col-sm-4'>文件名</th>
+                                            <th class='col-sm-2'>大小</th>
+                                            <th class='col-sm-2'>修改时间</th>
+                                            <th class='col-sm-4'>操作</th>
+                                            </thead>
+                                            <tbody>
+                                            {{~it :download:index}}
+                                            <tr>
+                                                <td>{{=download.name}}</td>
+                                                {{? download.size/1000<1024}}
+                                                <td>{{=download.size/1000}}KB</td>
+                                                {{?? (download.size/1000/1024).toFixed(2)<1024}}
+                                                <td>{{=(download.size/1000/1024).toFixed(2)}}MB</td>
+                                                {{??}}
+                                                <td>{{=(download.size/1024/1000/1024).toFixed(2)}}G</td>
+                                                {{?}}
+                                                <td>{{=new Date(download.lastModified).toLocaleString()}}</td>
+                                                <td><input type="button" class="btn btn-primary" id="down-button-{{=download.name}}" data-down="{{=download.name}}" value="下载"/></td>
+                                            </tr>
+                                            {{~}}
+                                            </tbody>
+                                        </table>
+                                    </textarea>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane fade" id="complete">
+                                <div id="completing-list" class="col-sm-12">
+                                </div>
+                                <div class="panel-body">
+                                    <textarea id="complete-list" style="display: none">
+                                        <table class="table table-striped" id="list-complete-table" width='1000px;'>
+                                            <thead>
+                                            <tr>
+                                                <th class="col-sm-4">文件名</th>
+                                                <th class="col-sm-4">大小</th>
+                                                <th class="col-sm-4">操作</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {{~it :com:index}}
+                                            <tr>
+                                                <td class="col-sm-4">{{=com.name}}</td>
+                                                {{? com.fileSize/1000<1024}}
+                                                <td class="col-sm-4">{{=com.fileSize/1000}}KB</td>
+                                                {{?? (com.fileSize/1000/1024).toFixed(2)<1024}}
+                                                <td class="col-sm-4">{{=(com.fileSize/1000/1024).toFixed(2)}}MB</td>
+                                                {{??}}
+                                                <td class="col-sm-4">{{=(com.fileSize/1024/1000/1024).toFixed(2)}}G</td>
+                                                {{?}}
+                                                <td class="col-sm-4"><input type="button" class="btn btn-primary" id="del-button-{{=com.uploadId}}" data-del="{{=com.uploadId}}" value="删除"/>
+                                                </td>
+                                            </tr>
+                                            {{~}}
+                                            </tbody>
+                                        </table>
+                                    </textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="http://gosspublic.alicdn.com/aliyun-oss-sdk-4.4.4.min.js"></script>
+<script type="text/javascript" src="app.js"></script>
+<script>
+    window.nodeRequire = require;
+    delete window.require;
+    delete window.exports;
+    delete window.module;
+</script>
+<script src="node_modules/jquery/dist/jquery.js"></script>
+<script type="text/javascript"
+        src="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/cr-1.3.3/fh-3.1.2/kt-2.2.1/rg-1.0.0/rr-1.2.0/sc-1.4.2/se-1.2.2/datatables.min.js"></script>
+<script src="node_modules/bootstrap.min.js/bootstrap.min.js"></script>
+<script src='node_modules/spark-md5/spark-md5.js'></script>
+<script src="node_modules/dot/doT.js"></script>
+</body>
+</html>

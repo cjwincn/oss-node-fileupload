@@ -1,6 +1,6 @@
 {
-  "AccessKeyId" : "LTAIMuk4Nt3xk5mL",
-  "AccessKeySecret" : "5JCkNeSc2A8zDAyOeP2rHHfBAXkoWy",
+  "AccessKeyId" : "%",
+  "AccessKeySecret" : "%",
   "RoleArn" : "acs:ram::1380393905995132:role/ramtestwrite",
   "TokenExpireTime" : "900",
   "PolicyFile": "policy/all_policy.txt"
